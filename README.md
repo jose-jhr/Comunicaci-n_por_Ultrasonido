@@ -129,6 +129,125 @@ declaramos una variable que nos almacenara el estado del permiso del microfono.
     private var isMicPermiso = false
 ```
 
+Llamamos a la funcion checkPermisoMic, que nos indicara si tiene permisos de usar el microfono 
+
+```kotlin 
+     //verifica permiso de microfono
+        isMicPermiso = checkPermisoMic()
+```
+
+```kotlin 
+       /**
+     * Chekea si tiene permisos de microfono
+     */
+    private fun checkPermisoMic(): Boolean {
+        val permiso = ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
+        return permiso == PackageManager.PERMISSION_GRANTED
+    }
+```
+
+**5.2) Inicializamos la clase TensorAudio**
+
+```kotlin 
+     //init tensorAudio
+        tensorAudio = TensorAudio(this)
+```
+
+
+
+
+
+**5.3) Configuramos la clase que contendra las acciones de las vistas. **
+```kotlin 
+     //Views
+        viewStart()
+```
+
+```kotlin 
+     /**
+     * Configuraciones de vistas
+     */
+    private fun viewStart() {
+        //TODO Boton escuchar
+       vb.btnEscuchar.setOnClickListener {
+           if(isMicPermiso){
+                tensorAudio.initialize()
+                //datos recibidos
+                var datosRx = ""
+                var mensajeCompleto = ""
+                //no duplicar
+                var isDuplicate = false
+                //escuchar respuesta de tensorAudio
+               tensorAudio.setResultListener(object :TensorResultListener{
+                   override fun onTensorResult(results: List<String>) {
+                       Log.d("outputModel",results[0])
+                       when(results[0][0]){
+                           '0'->{
+                               if (!isDuplicate){
+                                   datosRx+="0"
+                                   isDuplicate = true
+                               }
+                           }
+                           '1'->{
+                               if (!isDuplicate){
+                                   datosRx+='1'
+                                   isDuplicate = true
+                               }
+                           }
+                           '2'->isDuplicate = false
+                       }
+
+                       if (datosRx.length==8){
+                           val charValue = datosRx.toInt(2).toChar()
+                           mensajeCompleto+=charValue
+                           //set mensaje consola
+                           vb.txtConsolaRx.text = mensajeCompleto
+                           //resetear datos Rx
+                           datosRx = ""
+                       }
+                   }
+
+               })
+
+           }else{
+               permisosMic()
+           }
+       }
+
+        //TODO Boton enviar binarios
+        vb.btnEnviarMensaje.setOnClickListener {
+            if (vb.edtTextEnviar.text.isNotEmpty()){
+                //texto a enviar
+                val txtBinario = vb.edtTextEnviar.text.toString().toBinary()
+                vb.txtEnviar.text = txtBinario
+                //enviar texto con sonido
+                thread(start = true){
+                    for (binario in txtBinario){
+                        when(binario){
+                            '0'->playSound(R.raw.dos250)
+                            '1'->playSound(R.raw.cuatro400)
+                            else->{
+                                Thread.sleep(tiempoPausa)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+```
+
+
+
+
+
+
+
+```kotlin 
+     //init tensorAudio
+        tensorAudio = TensorAudio(this)
+```
+
 
 
 
