@@ -27,12 +27,19 @@ Implementación en buil.gradle, para hacer referencia a la vistas en xml.
 ```
 
 **1) Implementar la libreria tensorflow task audio**
+
+Esta biblioteca permite utilizar modelos de TensorFlow Lite específicamente diseñados para tareas de procesamiento de audio en aplicaciones móviles.
 ```
   //tensorflow audio task
   implementation 'org.tensorflow:tensorflow-lite-task-audio:0.2.0'
 ```
+2) Ahora vamos a implementar el modelo generado, puedes usar mi modelo.
 
+**Mi modelo:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/modelsound10.tflite
 
+**Etiquetas:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/labels.txt
+
+Proyecto Teachable Machine Ejemplo: https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/project.tm
 
 
 
