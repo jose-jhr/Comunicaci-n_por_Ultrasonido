@@ -131,11 +131,11 @@ declaramos una variable que nos almacenara el estado del permiso del microfono.
 
 Llamamos a la funcion checkPermisoMic, que nos indicara si tiene permisos de usar el microfono 
 
+
 ```kotlin 
      //verifica permiso de microfono
         isMicPermiso = checkPermisoMic()
 ```
-
 ```kotlin 
        /**
      * Chekea si tiene permisos de microfono
@@ -143,6 +143,36 @@ Llamamos a la funcion checkPermisoMic, que nos indicara si tiene permisos de usa
     private fun checkPermisoMic(): Boolean {
         val permiso = ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
         return permiso == PackageManager.PERMISSION_GRANTED
+    }
+```
+
+```kotlin 
+    ' override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when(requestCode){
+            REQUEST_RECORD_PERMISSION->{
+                isMicPermiso = grantResults[0] == PackageManager.PERMISSION_GRANTED
+                var mensaje = ""
+                mensaje = if (isMicPermiso) "Permiso asignado" else "Permiso denegado"
+                Toast.makeText(this, mensaje, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+```
+
+```kotlin 
+      /**
+     * Permisos de microfono
+     */
+    private fun permisosMic() {
+        ActivityCompat.requestPermissions(
+            this, arrayOf(Manifest.permission.RECORD_AUDIO),
+            REQUEST_RECORD_PERMISSION
+        )
     }
 ```
 
@@ -243,6 +273,11 @@ Llamamos a la funcion checkPermisoMic, que nos indicara si tiene permisos de usa
 
 **Frecuencia de 250hz:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/dos250.wav
 
+en la carpeta raw
+
+<a href="https://youtu.be/gwEq0-ACUr8?si=C6XIkI40u1sTYTNc&t=730">
+  <img src="https://github.com/jose-jhr/Comunicacion_por_Ultrasonido/assets/66834393/246bdcaa-d87d-4f06-88d6-02f2860db04f" width="450">
+</a>
 
 
 
