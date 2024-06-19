@@ -226,7 +226,7 @@ Llamamos a la funcion checkPermisoMic, que nos indicara si tiene permisos de usa
 ```
 
 ```kotlin 
-    ' override fun onRequestPermissionsResult(
+    override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
