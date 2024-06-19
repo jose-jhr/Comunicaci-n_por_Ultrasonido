@@ -109,12 +109,25 @@ class TensorAudio(val context: Context) {  // Clase TensorAudio que recibe un co
             .split(",")
     }
 }
-
 ```
 
 
+**4) Configuramos los permisos en el Manifest.**
 
+```kotlin 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+```
 
+**5) Configuramos la clase principal.**
+
+**5.1) Solicitamos los permisos de usar el microfono.**
+
+declaramos una variable que nos almacenara el estado del permiso del microfono.
+
+```kotlin 
+    //tiene permisos de microfono
+    private var isMicPermiso = false
+```
 
 
 
