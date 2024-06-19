@@ -361,14 +361,6 @@ en la carpeta raw
 
 
 
-```kotlin 
-     //init tensorAudio
-        tensorAudio = TensorAudio(this)
-```
-
-
-
-
 
 
 
