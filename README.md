@@ -45,7 +45,6 @@ Esta biblioteca permite utilizar modelos de TensorFlow Lite específicamente dis
 **3) Ahora vamos a implementar la clase que sera encargada de clasificar las señales de audio.**
 
 ```kotlin 
-
 import android.content.Context
 import android.provider.MediaStore.Audio
 import org.tensorflow.lite.task.audio.classifier.AudioClassifier
@@ -53,81 +52,62 @@ import org.tensorflow.lite.task.audio.classifier.Classifications
 import java.util.Timer
 import kotlin.concurrent.scheduleAtFixedRate
 
-
-enum class OPTION_MODEL{
-    SONIDOS
+interface TensorResultListener {  // Define una interfaz para el listener de resultados del tensor
+    fun onTensorResult(results: List<String>)  // Método para recibir resultados del tensor
 }
 
-interface InterfaceResultTensor{
-    fun resultGeneric(resultsTensor: List<String>)
-}
+class TensorAudio(val context: Context) {  // Clase TensorAudio que recibe un contexto de Android
 
-class TensorAudio(val context: Context) {
+    private var modelFileName = "modelsound10.tflite"  // Nombre del archivo del modelo
+    private val probabilityThreshold: Float = 0.4f  // Umbral de probabilidad
 
-    /**
-     * Patch models
-     */
-    private var modelTfLite = "modelsound10.tflite"
+    lateinit var resultListener: TensorResultListener  // Variable para el listener de resultados
 
-    // TODO 2.2: defining the minimum threshold
-    private val probabilityThreshold: Float = 0.4f
-
-    //lateinit interface usage return result
-    lateinit var interfaceResultTensor: InterfaceResultTensor
-
-    fun addInterfaceResultTensor(interfaceResultTensor: InterfaceResultTensor){
-        this.interfaceResultTensor = interfaceResultTensor
+    fun setResultListener(listener: TensorResultListener) {  // Método para establecer el listener de resultados
+        this.resultListener = listener  // Asigna el listener recibido
     }
 
+    fun initialize() {  // Método para inicializar la funcionalidad del tensor
+        // Carga el modelo seleccionado desde el archivo
+        val audioClassifier = AudioClassifier.createFromFile(context, modelFileName)
 
-    fun initConfiguracion(){
+        // Crea el tensor de entrada para audio
+        val inputTensor = audioClassifier.createInputTensorAudio()
 
-        //TODO 1.0 get model, with option model.
-        val classifierGeneric = AudioClassifier.createFromFile(context,modelTfLite)
+        // Crea el grabador de audio
+        val audioRecord = audioClassifier.createAudioRecord()
 
-        //TODO 2.0: Creating an audio recorder
-        val tensorGeneric = classifierGeneric.createInputTensorAudio()
+        // Inicia la grabación
+        audioRecord.startRecording()
 
-        //TODO 3.0 CREATING RECORD
-        val recordGeneric = classifierGeneric.createAudioRecord()
+        // Programa una tarea periódica
+        Timer().scheduleAtFixedRate(1, 700) {
+            // Carga el tensor con los datos de audio grabados
+            inputTensor.load(audioRecord)
 
-        //TODO 4.0 START RECORDING
-        recordGeneric.startRecording()
+            // Realiza la clasificación
+            val classifications = audioClassifier.classify(inputTensor)
 
-        //TODO INIT LISTEN delay is wait separate 1 milisecond and sample rate 500ms
-        Timer().scheduleAtFixedRate(1,700){
-            //load tensor
-            tensorGeneric.load(recordGeneric)
+            // Extrae los resultados relevantes
+            val output = extractMaxResults(classifications)
 
-            //add to classifier the tensor with relation
-            val outputGeneric = classifierGeneric.classify(tensorGeneric)
-
-            //Listen if change to speech with model generic
-            val outputListGeneric = getMaxValue(outputGeneric)
-
-            //TODO 5.0 if output list is no empty and is Speech
-
-            if (outputListGeneric.isNoEmpty()){
-                interfaceResultTensor.resultGeneric(outputListGeneric)
+            // Notifica al listener si hay resultados significativos
+            if (output.isNotEmpty()) {
+                resultListener.onTensorResult(output)
             }
-
         }
     }
-    private fun List<String>.isNoEmpty():Boolean{
-        return this[0].isNotEmpty() && this[1].isNotEmpty()
-    }
 
-    private fun getMaxValue(output: MutableList<Classifications>): List<String> {
-        val filteredModelOutput = output[0].categories.filter {
+    private fun extractMaxResults(classifications: MutableList<Classifications>): List<String> {
+        // Filtra las categorías con puntuación superior al umbral de probabilidad
+        val filteredResults = classifications[0].categories.filter {
             it.score > probabilityThreshold
         }
-        val outputStr =
-            filteredModelOutput.sortedBy { -it.score }
-                .joinToString(separator = "\n") { "${it.label} , ${it.score.toString()} " }.split(",")
-
-        return outputStr
+        // Ordena los resultados filtrados por puntuación descendente y los convierte en cadena
+        return filteredResults.sortedByDescending { it.score }
+            .joinToString(separator = "\n") { "${it.label},${it.score}" }
+            .split(",")
     }
-
 }
 
 ```
