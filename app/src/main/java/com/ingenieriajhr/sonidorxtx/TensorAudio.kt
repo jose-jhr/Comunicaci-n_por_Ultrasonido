@@ -78,6 +78,7 @@ class TensorAudio(val context: Context) {  // Clase TensorAudio que recibe un co
                 }
                 Log.d("outputModel",output[0])
                 //release
+                audioRecord?.release()
             }
         }
     }
