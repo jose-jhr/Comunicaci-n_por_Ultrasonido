@@ -603,6 +603,9 @@ class MainActivity : AppCompatActivity() {
 
 **5.4) Insertamos las frecuencias con las que fueron entrenados los modelos. **
 
+
+
+
 **Frecuencia de 400hz:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/cuatro400.wav
 
 **Frecuencia de 250hz:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/dos250.wav
