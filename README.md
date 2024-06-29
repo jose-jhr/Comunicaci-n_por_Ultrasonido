@@ -1,5 +1,10 @@
 **Comunicación por ultrasonido.**
 
+
+<a href="https://youtube.com/shorts/Sxi-gFbhtT8">
+  <img src="https://i9.ytimg.com/vi/Sxi-gFbhtT8/mqdefault.jpg?sqp=CPztgbQG-oaymwEoCMACELQB8quKqQMcGADwAQH4AbYIgAKAD4oCDAgAEAEYciBXKCAwDw==&rs=AOn4CLD0MKSiLTVKfQjZ06UHN2L6oamiuA" width="450">
+</a>
+
 Video de fredy vega explicando la complejidad del virus Stuxnet.
 
 <a href="https://youtu.be/gwEq0-ACUr8?si=C6XIkI40u1sTYTNc&t=730">
