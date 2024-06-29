@@ -10,6 +10,8 @@ import java.util.Timer
 import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.concurrent.thread
 
+
+//fuente 1
 interface TensorResultListener {  // Define una interfaz para el listener de resultados del tensor
     fun onTensorResult(results: List<String>)  // Método para recibir resultados del tensor
 }

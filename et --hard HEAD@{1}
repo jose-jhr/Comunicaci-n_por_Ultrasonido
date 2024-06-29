@@ -1,0 +1,346 @@
+[1mdiff --git a/.idea/deploymentTargetDropDown.xml b/.idea/deploymentTargetDropDown.xml[m
+[1mindex a99a808..7a5eac1 100644[m
+[1m--- a/.idea/deploymentTargetDropDown.xml[m
+[1m+++ b/.idea/deploymentTargetDropDown.xml[m
+[36m@@ -12,6 +12,6 @@[m
+         </deviceKey>[m
+       </Target>[m
+     </targetSelectedWithDropDown>[m
+[31m-    <timeTargetWasSelectedWithDropDown value="2024-06-28T15:55:31.182507200Z" />[m
+[32m+[m[32m    <timeTargetWasSelectedWithDropDown value="2024-06-19T04:04:49.309745200Z" />[m
+   </component>[m
+ </project>[m
+\ No newline at end of file[m
+[1mdiff --git a/.idea/vcs.xml b/.idea/vcs.xml[m
+[1mdeleted file mode 100644[m
+[1mindex 94a25f7..0000000[m
+[1m--- a/.idea/vcs.xml[m
+[1m+++ /dev/null[m
+[36m@@ -1,6 +0,0 @@[m
+[31m-<?xml version="1.0" encoding="UTF-8"?>[m
+[31m-<project version="4">[m
+[31m-  <component name="VcsDirectoryMappings">[m
+[31m-    <mapping directory="$PROJECT_DIR$" vcs="Git" />[m
+[31m-  </component>[m
+[31m-</project>[m
+\ No newline at end of file[m
+[1mdiff --git a/README.md b/README.md[m
+[1mnew file mode 100644[m
+[1mindex 0000000..4c8b137[m
+[1m--- /dev/null[m
+[1m+++ b/README.md[m
+[36m@@ -0,0 +1,624 @@[m
+[32m+[m[32m**Comunicación por ultrasonido.**[m
+[32m+[m
+[32m+[m[32mVideo de fredy vega explicando la complejidad del virus Stuxnet.[m
+[32m+[m
+[32m+[m[32m<a href="https://youtu.be/gwEq0-ACUr8?si=C6XIkI40u1sTYTNc&t=730">[m
+[32m+[m[32m  <img src="https://static.platzi.com/blog/uploads/2016/09/freddy-vega.jpg" width="450">[m
+[32m+[m[32m</a>[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mAunque en las investigaciones que se hicieron en este canal no se encontro que la forma de comunicación y dispersión del virus[m
+[32m+[m[32mfue el ultrasonido, se encontro que si existio un virus llamado **BadBios**[m
+[32m+[m
+[32m+[m[32mPara dar solución a esta tarea que es emplear el sonido para la comunicación entre dos dispositivos realizaremos las siguientes tareas.[m
+[32m+[m
+[32m+[m[32mposible error en Android.[m[41m [m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mimplementation 'androidx.appcompat:appcompat:1.5.0'[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mImplementación en buil.gradle, para hacer referencia a la vistas en xml.[m
+[32m+[m[32m```[m
+[32m+[m[32m buildFeatures{[m
+[32m+[m[32m        viewBinding = true[m
+[32m+[m[32m    }[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m**1) Implementar la libreria tensorflow task audio**[m
+[32m+[m
+[32m+[m[32mEsta biblioteca permite utilizar modelos de TensorFlow Lite específicamente diseñados para tareas de procesamiento de audio en aplicaciones móviles.[m
+[32m+[m[32m```[m
+[32m+[m[32m  //tensorflow audio task[m
+[32m+[m[32m  implementation 'org.tensorflow:tensorflow-lite-task-audio:0.2.0'[m
+[32m+[m[32m```[m
+[32m+[m[32m**2) Ahora vamos a implementar el modelo generado, puedes usar mi modelo.**[m
+[32m+[m
+[32m+[m[32m**Mi modelo:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/modelsound10.tflite[m
+[32m+[m
+[32m+[m[32m**Etiquetas:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/labels.txt[m
+[32m+[m
+[32m+[m[32m**Proyecto Teachable Machine Ejemplo:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/project.tm[m
+[32m+[m
+[32m+[m
+[32m+[m[32m**3) Ahora vamos a implementar la clase que sera encargada de clasificar las señales de audio.**[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32mimport android.content.Context[m
+[32m+[m[32mimport android.media.AudioRecord[m
+[32m+[m[32mimport android.util.Log[m
+[32m+[m[32mimport kotlinx.coroutines.Runnable[m
+[32m+[m[32mimport org.tensorflow.lite.task.audio.classifier.AudioClassifier[m
+[32m+[m[32mimport org.tensorflow.lite.task.audio.classifier.Classifications[m
+[32m+[m[32mimport org.tensorflow.lite.task.core.BaseOptions[m
+[32m+[m
+[32m+[m[32mimport java.util.Timer[m
+[32m+[m[32mimport kotlin.concurrent.scheduleAtFixedRate[m
+[32m+[m[32mimport kotlin.concurrent.thread[m
+[32m+[m
+[32m+[m[32minterface TensorResultListener {  // Define una interfaz para el listener de resultados del tensor[m
+[32m+[m[32m    fun onTensorResult(results: List<String>)  // Método para recibir resultados del tensor[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mprivate var timer: Timer? = null  // Timer para la tarea periódica[m
+[32m+[m[32mprivate var audioClassifier: AudioClassifier? = null[m
+[32m+[m[32mprivate var audioRecord: AudioRecord? = null[m
+[32m+[m
+[32m+[m[32mclass TensorAudio(val context: Context) {  // Clase TensorAudio que recibe un contexto de Android[m
+[32m+[m
+[32m+[m[32m    private var modelFileName = "model2.tflite"  // Nombre del archivo del modelo[m
+[32m+[m[32m    private val probabilityThreshold: Float = 0.80f  // Umbral de probabilidad[m
+[32m+[m
+[32m+[m[32m    lateinit var resultListener: TensorResultListener  // Variable para el listener de resultados[m
+[32m+[m
+[32m+[m[32m    fun setResListener(listener: TensorResultListener) {  // Método para establecer el listener de resultados[m
+[32m+[m[32m        this.resultListener = listener  // Asigna el listener recibido[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    fun initialize() {  // Método para inicializar la funcionalidad del tensor[m
+[32m+[m
+[32m+[m[32m        val baseOption = BaseOptions.builder()[m
+[32m+[m[32m        baseOption.setNumThreads(8)[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        val option = AudioClassifier.AudioClassifierOptions.builder()[m
+[32m+[m[32m            .setScoreThreshold(probabilityThreshold)[m
+[32m+[m[32m            .setMaxResults(3)[m
+[32m+[m[32m            .setBaseOptions(baseOption.build())[m
+[32m+[m[32m            .build()[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        // Carga el modelo seleccionado desde el archivo[m
+[32m+[m[32m        audioClassifier = AudioClassifier.createFromFileAndOptions(context, modelFileName,option)[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        // Crea el tensor de entrada para audio[m
+[32m+[m[32m        val inputTensor = audioClassifier?.createInputTensorAudio()[m
+[32m+[m
+[32m+[m[32m        // Crea el grabador de audio[m
+[32m+[m[32m        audioRecord = audioClassifier?.createAudioRecord()[m
+[32m+[m
+[32m+[m[32m        timer = Timer()[m
+[32m+[m
+[32m+[m[32m        // Programa una tarea periódica[m
+[32m+[m[32m        timer?.scheduleAtFixedRate(0, 300) {[m
+[32m+[m[32m            // Inicia la grabación[m
+[32m+[m[32m            audioRecord?.startRecording()[m
+[32m+[m[32m            // Carga el tensor con los datos de audio grabados[m
+[32m+[m[32m            inputTensor?.load(audioRecord)[m
+[32m+[m
+[32m+[m[32m            // Realiza la clasificación[m
+[32m+[m[32m            val classifications = audioClassifier?.classify(inputTensor)[m
+[32m+[m
+[32m+[m[32m            // Extrae los resultados relevantes[m
+[32m+[m[32m            val output = extractMaxResults(classifications!!)[m
+[32m+[m
+[32m+[m[32m            // Notifica al listener si hay resultados significativos[m
+[32m+[m[32m            if (output.isNoEmpty()) {[m
+[32m+[m[32m                thread(start = true){[m
+[32m+[m[32m                    resultListener.onTensorResult(output)[m
+[32m+[m[32m                }[m
+[32m+[m[32m                Log.d("outputModel",output[0])[m
+[32m+[m[32m                //release[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    fun stop() {[m
+[32m+[m[32m        timer?.cancel()  // Cancela la tarea periódica[m
+[32m+[m[32m        audioRecord?.stop()  // Detiene la grabación de audio si está en curso[m
+[32m+[m[32m        audioClassifier?.close()  // Libera recursos del clasificador[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private fun List<String>.isNoEmpty():Boolean{[m
+[32m+[m[32m        return this[0].isNotEmpty() && this[1].isNotEmpty()[m
+[32m+[m[32m    }[m
+[32m+[m[32m    private fun extractMaxResults(classifications: MutableList<Classifications>): List<String> {[m
+[32m+[m[32m        // Filtra las categorías con puntuación superior al umbral de probabilidad[m
+[32m+[m[32m        val filteredResults = classifications[0].categories.filter {[m
+[32m+[m[32m            it.score > probabilityThreshold[m
+[32m+[m[32m        }[m
+[32m+[m[32m        // Ordena los resultados filtrados por puntuación descendente y los convierte en cadena[m
+[32m+[m[32m        return filteredResults.sortedByDescending { it.score }[m
+[32m+[m[32m            .joinToString(separator = "\n") { "${it.label},${it.score}" }[m
+[32m+[m[32m            .split(",")[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m
+[32m+[m[32m**4) Configuramos los permisos en el Manifest.**[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m    <uses-permission android:name="android.permission.RECORD_AUDIO" />[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m**5) Configuramos la clase principal y xml.**[m
+[32m+[m
+[32m+[m[32m```XML[m
+[32m+[m[32m    <?xml version="1.0" encoding="utf-8"?>[m
+[32m+[m[32m<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"[m
+[32m+[m[32m    xmlns:app="http://schemas.android.com/apk/res-auto"[m
+[32m+[m[32m    xmlns:tools="http://schemas.android.com/tools"[m
+[32m+[m[32m    android:layout_width="match_parent"[m
+[32m+[m[32m    android:layout_height="match_parent"[m
+[32m+[m[32m    tools:context=".MainActivity">[m
+[32m+[m
+[32m+[m[32m    <EditText[m
+[32m+[m[32m        android:id="@+id/edtTextEnviar"[m
+[32m+[m[32m        android:layout_width="match_parent"[m
+[32m+[m[32m        android:layout_height="wrap_content"[m
+[32m+[m[32m        android:layout_marginStart="10dp"[m
+[32m+[m[32m        android:layout_marginTop="20dp"[m
+[32m+[m[32m        android:layout_marginEnd="10dp"[m
+[32m+[m[32m        app:layout_constraintEnd_toEndOf="parent"[m
+[32m+[m[32m        app:layout_constraintStart_toStartOf="parent"[m
+[32m+[m[32m        app:layout_constraintTop_toTopOf="parent"[m
+[32m+[m
+[32m+[m[32m        ></EditText>[m
+[32m+[m
+[32m+[m[32m    <Button[m
+[32m+[m[32m        android:layout_width="wrap_content"[m
+[32m+[m[32m        android:layout_height="wrap_content"[m
+[32m+[m[32m        app:layout_constraintEnd_toEndOf="parent"[m
+[32m+[m[32m        app:layout_constraintStart_toStartOf="parent"[m
+[32m+[m[32m        app:layout_constraintTop_toBottomOf="@+id/edtTextEnviar"[m
+[32m+[m[32m        android:layout_marginTop="10dp"[m
+[32m+[m[32m        android:text="@string/enviar"[m
+[32m+[m[32m        android:id="@+id/btnEnviarMensaje"[m
+[32m+[m[32m        ></Button>[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    <TextView[m
+[32m+[m[32m        android:id="@+id/txtEnviar"[m
+[32m+[m[32m        android:layout_width="match_parent"[m
+[32m+[m[32m        android:layout_height="wrap_content"[m
+[32m+[m[32m        app:layout_constraintEnd_toEndOf="parent"[m
+[32m+[m[32m        app:layout_constraintStart_toStartOf="parent"[m
+[32m+[m[32m        app:layout_constraintTop_toBottomOf="@+id/btnEnviarMensaje"[m
+[32m+[m[32m        android:textColor="@color/white"[m
+[32m+[m[32m        android:layout_marginStart="10dp"[m
+[32m+[m[32m        android:layout_marginEnd="10dp"[m
+[32m+[m[32m        ></TextView>[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    <Button[m
+[32m+[m[32m        android:id="@+id/btnEscuchar"[m
+[32m+[m[32m        android:layout_width="100dp"[m
+[32m+[m[32m        android:layout_height="100dp"[m
+[32m+[m[32m        android:layout_marginTop="20dp"[m
+[32m+[m[32m        android:background="@drawable/baseline_mic_24"[m
+[32m+[m[32m        app:layout_constraintEnd_toEndOf="parent"[m
+[32m+[m[32m        app:layout_constraintStart_toStartOf="parent"[m
+[32m+[m[32m        app:layout_constraintTop_toBottomOf="@+id/txtEnviar"></Button>[m
+[32m+[m
+[32m+[m[32m    <TextView[m
+[32m+[m[32m        android:layout_width="match_parent"[m
+[32m+[m[32m        android:layout_height="0dp"[m
+[32m+[m[32m        android:layout_marginStart="10dp"[m
+[32m+[m[32m        android:layout_marginEnd="10dp"[m
+[32m+[m[32m        android:background="@color/black"[m
+[32m+[m[32m        android:padding="10dp"[m
+[32m+[m[32m        android:text="consola"[m
+[32m+[m[32m        android:textColor="@color/white"[m
+[32m+[m[32m        android:textSize="20sp"[m
+[32m+[m[32m        app:layout_constraintBottom_toBottomOf="parent"[m
+[32m+[m[32m        app:layout_constraintEnd_toEndOf="parent"[m
+[32m+[m[32m        app:layout_constraintStart_toStartOf="parent"[m
+[32m+[m[32m        app:layout_constraintTop_toBottomOf="@+id/btnEscuchar"[m
+[32m+[m[32m        android:layout_marginBottom="10dp"[m
+[32m+[m[32m        android:id="@+id/txtConsolaRx"[m
+[32m+[m[32m        ></TextView>[m
+[32m+[m[32m</androidx.constraintlayout.widget.ConstraintLayout>[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m**5.1) Solicitamos los permisos de usar el microfono.**[m
+[32m+[m
+[32m+[m[32mdeclaramos una variable que nos almacenara el estado del permiso del microfono.[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m    //tiene permisos de microfono[m
+[32m+[m[32m    private var isMicPermiso = false[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mLlamamos a la funcion checkPermisoMic, que nos indicara si tiene permisos de usar el microfono[m[41m [m
+[32m+[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m     //verifica permiso de microfono[m
+[32m+[m[32m        isMicPermiso = checkPermisoMic()[m
+[32m+[m[32m```[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m       /**[m
+[32m+[m[32m     * Chekea si tiene permisos de microfono[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private fun checkPermisoMic(): Boolean {[m
+[32m+[m[32m        val permiso = ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)[m
+[32m+[m[32m        return permiso == PackageManager.PERMISSION_GRANTED[m
+[32m+[m[32m    }[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m    override fun onRequestPermissionsResult([m
+[32m+[m[32m        requestCode: Int,[m
+[32m+[m[32m        permissions: Array<out String>,[m
+[32m+[m[32m        grantResults: IntArray[m
+[32m+[m[32m    ) {[m
+[32m+[m[32m        super.onRequestPermissionsResult(requestCode, permissions, grantResults)[m
+[32m+[m[32m        when(requestCode){[m
+[32m+[m[32m            REQUEST_RECORD_PERMISSION->{[m
+[32m+[m[32m                isMicPermiso = grantResults[0] == PackageManager.PERMISSION_GRANTED[m
+[32m+[m[32m                var mensaje = ""[m
+[32m+[m[32m                mensaje = if (isMicPermiso) "Permiso asignado" else "Permiso denegado"[m
+[32m+[m[32m                Toast.makeText(this, mensaje, Toast.LENGTH_SHORT).show()[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m      /**[m
+[32m+[m[32m     * Permisos de microfono[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private fun permisosMic() {[m
+[32m+[m[32m        ActivityCompat.requestPermissions([m
+[32m+[m[32m            this, arrayOf(Manifest.permission.RECORD_AUDIO),[m
+[32m+[m[32m            REQUEST_RECORD_PERMISSION[m
+[32m+[m[32m        )[m
+[32m+[m[32m    }[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m**5.2) Inicializamos la clase TensorAudio**[m
+[32m+[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m     //init tensorAudio[m
+[32m+[m[32m        tensorAudio = TensorAudio(this)[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m**5.3) Configuramos la clase que contendra las acciones de las vistas. **[m
+[32m+[m[32m```kotlin[m[41m [m
+[32m+[m[32m     //Views[m
+[32m+[m[32m        viewStart()[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m```kotlin[m[

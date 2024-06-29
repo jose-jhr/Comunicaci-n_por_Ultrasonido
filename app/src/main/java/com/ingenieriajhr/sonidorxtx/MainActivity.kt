@@ -37,7 +37,6 @@ private var tiempoSonido =500L
 private var isThread = true
 
 
-
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         vb = ActivityMainBinding.inflate(layoutInflater)
