@@ -610,6 +610,10 @@ class MainActivity : AppCompatActivity() {
 
 **Frecuencia de 250hz:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/dos250.wav
 
+**Proyecto teachable machine:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/project.tm
+
+**Modelo TensorFlow:** https://cienciayculturacreativa.com/2024/comunicacion_ultrasonido/model2.tflite
+
 en la carpeta raw
 
 <a href="https://youtu.be/gwEq0-ACUr8?si=C6XIkI40u1sTYTNc&t=730">
